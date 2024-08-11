@@ -1,6 +1,6 @@
-# AudioTransReact
+# VoiceReactify
 
-AudioTransReact is a React-based application that integrates audio processing with Text-to-Speech (TTS) functionalities. This project allows users to record audio, transcribe it into text using AI models, and optionally convert the text back into speech.
+VoiceReactify is a React-based application that integrates audio processing with Text-to-Speech (TTS) functionalities. This project allows users to record audio, transcribe it into text using AI models, and optionally convert the text back into speech.
 
 ## Features
 
@@ -24,8 +24,8 @@ Make sure you have the following installed:
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/yourusername/AudioTransReact.git
-   cd AudioTransReact
+   git clone https://github.com/yourusername/VoiceReactify.git
+   cd VoiceReactify
    ```
 
 2. **Install the frontend dependencies:**
