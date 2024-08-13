@@ -1,10 +1,14 @@
-from fastapi import FastAPI, HTTPException, Form
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.responses import FileResponse, StreamingResponse
 import torch
 from parler_tts import ParlerTTSForConditionalGeneration
 from transformers import AutoTokenizer
 import soundfile as sf
-import os
+from pydantic import BaseModel
+import numpy as np
+from src.voice_model import transcribe_audio
+from io import BytesIO
+from pydub import AudioSegment
 
 app = FastAPI()
 
@@ -75,6 +79,34 @@ async def generate_voice(prompt: str = Form(...), description: str = Form(...)):
         return StreamingResponse(iterfile(), media_type="audio/wav", headers={"Content-Disposition": "attachment; filename=output.wav"})
     except Exception as e:
         print(f"Error occurred: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/transcribe/")
+async def transcribe(file: UploadFile = File(...)):
+    try:
+        # 打印文件信息
+        print(f"Received file: {file.filename}, Content Type: {file.content_type}")
+        
+        # 加载上传的音频文件
+        audio = AudioSegment.from_file(file.file)
+        print(f"Audio duration: {audio.duration_seconds} seconds, Channels: {audio.channels}")
+
+        # 重采样到 16 kHz
+        audio = audio.set_frame_rate(16000)
+
+        # 将音频转换为 NumPy 数组并归一化
+        audio_data = np.array(audio.get_array_of_samples()).astype(np.float32) / 32768.0
+
+        # 转录音频
+        transcription = transcribe_audio(audio_data, sampling_rate=16000)
+
+        if transcription:
+            return {"transcription": transcription}
+        else:
+            raise ValueError("Transcription failed or returned unexpected format.")
+
+    except Exception as e:
+        print(f"Error during transcription: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
