@@ -4,23 +4,21 @@ import torch
 from parler_tts import ParlerTTSForConditionalGeneration
 from transformers import AutoTokenizer
 import soundfile as sf
-from pydantic import BaseModel
-import numpy as np
-from src.voice_model import transcribe_audio
 from io import BytesIO
+import numpy as np
 from pydub import AudioSegment
+from pydantic import BaseModel
+from src.voice_model import transcribe_audio
 
 app = FastAPI()
 
-# 检查是否有可用的 GPU
+# Check if GPU is available
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
 
-# 加载模型和分词器
+# Load model and tokenizer
 print("Loading model...")
-
 model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(device)
-
 print("Model loaded successfully.")
 
 print("Loading tokenizer...")
@@ -33,14 +31,14 @@ async def generate_voice(prompt: str = Form(...), description: str = Form(...)):
         print(f"Received prompt: {prompt}")
         print(f"Received description: {description}")
 
-        # 限制描述和提示文本的长度
+        # Limit the length of the description and prompt text
         max_length = 128
         description = description[:max_length]
         prompt = prompt[:max_length]
         print(f"Truncated description: {description}")
         print(f"Truncated prompt: {prompt}")
-        
-        # 将描述和提示文本转换为模型的输入格式
+
+        # Tokenize inputs
         print("Tokenizing inputs...")
         encoded_input = tokenizer(description, return_tensors="pt", padding=True, truncation=True, max_length=max_length)
         input_ids = encoded_input.input_ids.to(device)
@@ -51,7 +49,7 @@ async def generate_voice(prompt: str = Form(...), description: str = Form(...)):
         prompt_attention_mask = prompt_encoded.attention_mask.to(device)
         print("Inputs tokenized successfully.")
 
-        # 生成语音时同时传递 attention_mask 和 prompt_attention_mask
+        # Generate speech with attention mask
         print("Generating speech...")
         generation = model.generate(
             input_ids=input_ids, 
@@ -62,15 +60,16 @@ async def generate_voice(prompt: str = Form(...), description: str = Form(...)):
         )
         print("Speech generated successfully.")
 
+        # Convert the generated output to audio array
         audio_arr = generation.cpu().numpy().squeeze()
 
-        # 保存生成的音频文件
+        # Save the generated audio file
         output_path = "parler_tts_out.wav"
         print(f"Saving output to {output_path}...")
         sf.write(output_path, audio_arr, model.config.sampling_rate)
         print(f"Output saved to {output_path}.")
 
-        # 使用流式响应返回生成的音频文件
+        # Return the generated audio file
         def iterfile():
             with open(output_path, mode="rb") as file_like:
                 yield from file_like
@@ -84,20 +83,20 @@ async def generate_voice(prompt: str = Form(...), description: str = Form(...)):
 @app.post("/transcribe/")
 async def transcribe(file: UploadFile = File(...)):
     try:
-        # 打印文件信息
+        # Print file info
         print(f"Received file: {file.filename}, Content Type: {file.content_type}")
         
-        # 加载上传的音频文件
+        # Load the uploaded audio file
         audio = AudioSegment.from_file(file.file)
         print(f"Audio duration: {audio.duration_seconds} seconds, Channels: {audio.channels}")
 
-        # 重采样到 16 kHz
+        # Resample to 16 kHz
         audio = audio.set_frame_rate(16000)
 
-        # 将音频转换为 NumPy 数组并归一化
+        # Convert audio to NumPy array and normalize
         audio_data = np.array(audio.get_array_of_samples()).astype(np.float32) / 32768.0
 
-        # 转录音频
+        # Transcribe audio
         transcription = transcribe_audio(audio_data, sampling_rate=16000)
 
         if transcription:
@@ -107,8 +106,8 @@ async def transcribe(file: UploadFile = File(...)):
 
     except Exception as e:
         print(f"Error during transcription: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
+        raise HTTPException(status_code=500, detail=str(e))  # Corrected line
+    
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Parler TTS API! Use the /generate-voice/ endpoint to generate speech."}

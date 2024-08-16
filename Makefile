@@ -20,7 +20,7 @@ all: install_be install_fe
 
 # Install backend dependencies
 install_be:
-	cd $(BE_DIR) && $(PIP) install -r $(BE_REQUIREMENTS)
+	cd $(BE_DIR) && $(PIP) install -r requirements.txt 
 
 # Install frontend dependencies
 install_fe:
@@ -28,7 +28,8 @@ install_fe:
 
 # Run backend
 backend:
-	cd $(BE_DIR) && source env/bin/activate && uvicorn main:app --reload
+	cd $(BE_DIR) && bash -c "source venv/bin/activate && uvicorn main:app --reload"
+
 
 # Run frontend
 frontend:
