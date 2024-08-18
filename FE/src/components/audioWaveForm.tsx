@@ -1,17 +1,41 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
 import RecordButton from "@/components/recordButton";
 import useRecorder from "@/composables/useRecorder";
+import { Textarea } from "@/components/ui/textarea";
 
 const AudioWaveform = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawAudioRef = useRef<number | null>(null);
+  const [text, setText] = useState("");
+
+  const transcribeApi = useCallback(async (formData: FormData) => {
+    fetch("http://localhost:8000/transcribe", {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.transcription) {
+          setText("");
+          setText(data.transcription);
+        } else {
+          console.error("Transcription failed or returned unexpected format.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error during transcription request:", error);
+      });
+  }, []);
+
   const {
     startRecording,
     stopRecording,
     isRecording,
     dataArrayRef,
     analyserRef,
-  } = useRecorder();
+  } = useRecorder({
+    transcribeApi,
+  });
 
   const drawWaveform = useCallback(() => {
     if (!analyserRef.current || !canvasRef.current || !dataArrayRef.current)
@@ -83,19 +107,27 @@ const AudioWaveform = () => {
   }, [isRecording, drawWaveform]);
 
   return (
-    <div>
-      <canvas
-        ref={canvasRef}
-        width="600"
-        height="200"
-        className=" border-black border-2 mb-2"
-      ></canvas>
-      <RecordButton
-        record={isRecording ? stopRecording : startRecording}
-        isRecording={isRecording}
-      >
-        {isRecording ? "Stop Recording" : "Start Recording"}
-      </RecordButton>
+    <div className="shadow-xl  px-4 py-6 rounded">
+      <div>
+        <h2 className=" font-mono text-2xl my-2">Audio Recorder</h2>
+        <canvas
+          ref={canvasRef}
+          width="600"
+          height="200"
+          className=" border-black border-2 mb-4"
+        ></canvas>
+        <RecordButton
+          record={isRecording ? stopRecording : startRecording}
+          isRecording={isRecording}
+        >
+          {isRecording ? "Stop" : "Start"}
+        </RecordButton>
+      </div>
+      <Textarea
+        className="mt-2"
+        placeholder="Press button to transcribe"
+        defaultValue={text}
+      ></Textarea>
     </div>
   );
 };

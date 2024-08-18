@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 import torch
 from parler_tts import ParlerTTSForConditionalGeneration
 from transformers import AutoTokenizer
@@ -11,6 +12,18 @@ from pydantic import BaseModel
 from src.voice_model import transcribe_audio
 
 app = FastAPI()
+
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # 允許的來源應包括你的前端地址
+    allow_credentials=True,
+    allow_methods=["*"],  # 允許的HTTP方法
+    allow_headers=["*"],  # 允許的HTTP標頭
+)
+
+
 
 # Check if GPU is available
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -25,7 +38,7 @@ print("Loading tokenizer...")
 tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
 print("Tokenizer loaded successfully.")
 
-@app.post("/generate-voice/")
+@app.post("/generate-voice")
 async def generate_voice(prompt: str = Form(...), description: str = Form(...)):
     try:
         print(f"Received prompt: {prompt}")
@@ -80,7 +93,7 @@ async def generate_voice(prompt: str = Form(...), description: str = Form(...)):
         print(f"Error occurred: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/transcribe/")
+@app.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
     try:
         # Print file info

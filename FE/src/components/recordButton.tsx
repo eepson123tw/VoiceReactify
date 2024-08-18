@@ -14,21 +14,23 @@ export default function RecordButton({
   isRecording: boolean;
 }) {
   const computedClass = isRecording ? "bg-red-500" : "bg-black";
+  const hoverClass = isRecording ? "hover:bg-red-600" : "hover:bg-white";
   return (
     <div className="flex flex-col items-center">
       <Button
         variant="outline"
         size="icon"
         className={cn(
-          "group hover:bg-white p-2 w-20 h-20 rounded-full",
-          computedClass
+          computedClass,
+          hoverClass,
+          "group p-2 w-20 h-20 rounded-full"
         )}
         onClick={record}
       >
         {!isRecording ? (
           <PlayIcon className="h-20 w-20  text-white group-hover:text-black"></PlayIcon>
         ) : (
-          <RadiobuttonIcon className="h-20 w-20  text-white group-hover:text-black"></RadiobuttonIcon>
+          <RadiobuttonIcon className="h-20 w-20  text-black group-hover:text-white"></RadiobuttonIcon>
         )}
       </Button>
       {children}
