@@ -2,6 +2,9 @@ import { useRef, useEffect, useCallback, useState } from "react";
 import RecordButton from "@/components/recordButton";
 import useRecorder from "@/composables/useRecorder";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+
+import { SpeakerLoudIcon } from "@radix-ui/react-icons";
 
 const AudioWaveform = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -26,6 +29,35 @@ const AudioWaveform = () => {
         console.error("Error during transcription request:", error);
       });
   }, []);
+
+  const playVoice = () => {
+    fetch("http://localhost:8000/generate-voice", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        prompt: text,
+        description: "This is a test description",
+      }),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.blob(); // We expect a WAV file in response
+      })
+      .then((blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio
+          .play()
+          .catch((error) => console.error("Error playing audio:", error));
+      })
+      .catch((error) => {
+        console.error("There was a problem with the fetch operation:", error);
+      });
+  };
 
   const {
     startRecording,
@@ -123,11 +155,16 @@ const AudioWaveform = () => {
           {isRecording ? "Stop" : "Start"}
         </RecordButton>
       </div>
-      <Textarea
-        className="mt-2"
-        placeholder="Press button to transcribe"
-        defaultValue={text}
-      ></Textarea>
+      <div className="flex flex-col gap-1">
+        <Textarea
+          className="mt-2"
+          placeholder="Press button to transcribe"
+          defaultValue={text}
+        ></Textarea>
+        <Button variant="outline" size="icon" onClick={playVoice}>
+          <SpeakerLoudIcon className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 };
