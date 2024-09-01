@@ -1,6 +1,8 @@
 import { useRef, useEffect, useCallback, useState } from "react";
+import SwitchStream from "@/components/switchStream";
 import RecordButton from "@/components/recordButton";
 import useRecorder from "@/composables/useRecorder";
+import useStreamApi from "@/composables/useStreamApi";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
@@ -10,25 +12,7 @@ const AudioWaveform = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawAudioRef = useRef<number | null>(null);
   const [text, setText] = useState("");
-
-  const transcribeApi = useCallback(async (formData: FormData) => {
-    fetch("http://localhost:8000/transcribe", {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.transcription) {
-          setText("");
-          setText(data.transcription);
-        } else {
-          console.error("Transcription failed or returned unexpected format.");
-        }
-      })
-      .catch((error) => {
-        console.error("Error during transcription request:", error);
-      });
-  }, []);
+  const [isStream, setIsStream] = useState(false);
 
   const playVoice = () => {
     fetch("http://localhost:8000/generate-voice", {
@@ -59,6 +43,8 @@ const AudioWaveform = () => {
       });
   };
 
+  const { transcribeStreamApi, transcribeApi } = useStreamApi({ setText });
+
   const {
     startRecording,
     stopRecording,
@@ -66,7 +52,7 @@ const AudioWaveform = () => {
     dataArrayRef,
     analyserRef,
   } = useRecorder({
-    transcribeApi,
+    transcribeApi: isStream ? transcribeStreamApi : transcribeApi,
   });
 
   const drawWaveform = useCallback(() => {
@@ -141,7 +127,13 @@ const AudioWaveform = () => {
   return (
     <div className="shadow-xl  px-4 py-6 rounded">
       <div>
-        <h2 className=" font-mono text-2xl my-2">Audio Recorder</h2>
+        <h2 className="font-mono text-2xl my-2">Audio Recorder</h2>
+        <div className="flex my-2 justify-end">
+          <SwitchStream
+            isStream={isStream}
+            setIsStream={setIsStream}
+          ></SwitchStream>
+        </div>
         <canvas
           ref={canvasRef}
           width="600"
@@ -159,6 +151,7 @@ const AudioWaveform = () => {
         <Textarea
           className="mt-2"
           placeholder="Press button to transcribe"
+          rows={6}
           defaultValue={text}
         ></Textarea>
         <Button variant="outline" size="icon" onClick={playVoice}>
