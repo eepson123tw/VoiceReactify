@@ -4,7 +4,7 @@ import json
 import uuid
 from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse,JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import torch
 from parler_tts import ParlerTTSForConditionalGeneration
@@ -15,6 +15,8 @@ import numpy as np
 from pydub import AudioSegment
 from pydantic import BaseModel
 from src.voice_model import transcribe_audio
+from src.read_service_config import check_system_resources
+
 
 app = FastAPI()
 
@@ -191,7 +193,13 @@ async def transcribe(file: UploadFile = File(...)):
         print(f"Error during transcription: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-    
+
+@app.get("/checkSystem")
+async def check_system():
+    result = check_system_resources()
+    return JSONResponse(content=result.dict())
+
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Parler TTS API! Use the /generate-voice/ endpoint to generate speech."}

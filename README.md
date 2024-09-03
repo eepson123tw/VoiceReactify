@@ -40,6 +40,8 @@ Make sure you have the following installed:
 
    ```bash
    pip install -r requirements.txt
+
+   pip download -r requirements_cuda.txt -d ./packages   #for the load local packages
    ```
 
 ### Running the Application

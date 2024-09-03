@@ -16,6 +16,14 @@ ENV/
 .Python
 migrations/
 
+# Ignore the packages directory
+packages/
+
+# Ignore Docker-related files
+*.log
+*.pid
+*.tar
+
 # React
 node_modules/
 build/
