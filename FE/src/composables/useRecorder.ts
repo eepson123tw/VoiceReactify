@@ -2,9 +2,10 @@ import { useState, useRef, useCallback, useEffect } from "react";
 
 interface UseRecorderProps {
   transcribeApi: (file: FormData) => Promise<void>;
+  timeStamp: boolean;
 }
 
-const useRecorder = ({ transcribeApi }: UseRecorderProps) => {
+const useRecorder = ({ transcribeApi, timeStamp }: UseRecorderProps) => {
   const audioContextRef = useRef<AudioContext | null>(null); // AudioContext 物件的引用，用來處理音訊信號。
   const analyserRef = useRef<AnalyserNode | null>(null); // AnalyserNode 的引用，用於分析音訊信號，視覺化或獲取頻譜數據。
   const audioChunksRef = useRef<Blob[]>([]); // 儲存錄音數據的引用 Blob 物件。
@@ -59,11 +60,11 @@ const useRecorder = ({ transcribeApi }: UseRecorderProps) => {
         // 創建FormData並附加音頻文件
         const formData = new FormData();
         formData.append("file", blob, "recording.wav");
-
+        formData.append("return_timestamps", `${timeStamp}`);
         transcribeApi(formData);
       };
     }
-  }, [transcribeApi]);
+  }, [transcribeApi, timeStamp]);
 
   useEffect(() => {
     return () => {

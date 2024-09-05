@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from "react";
-import SwitchStream from "@/components/switchStream";
+import ToggleEventOption from "@/components/toggleEventOption";
 import RecordButton from "@/components/recordButton";
 import useRecorder from "@/composables/useRecorder";
 import useStreamApi from "@/composables/useStreamApi";
@@ -12,7 +12,9 @@ const AudioWaveform = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawAudioRef = useRef<number | null>(null);
   const [text, setText] = useState("");
-  const [isStream, setIsStream] = useState(false);
+  const [isOption, setIsOption] = useState<Array<"StreamApi" | "TimeStamp">>(
+    []
+  );
 
   const playVoice = () => {
     fetch("http://localhost:8000/generate-voice", {
@@ -43,7 +45,10 @@ const AudioWaveform = () => {
       });
   };
 
-  const { transcribeStreamApi, transcribeApi } = useStreamApi({ setText });
+  const { transcribeStreamApi, transcribeApi } = useStreamApi({
+    setText,
+    timeStamp: isOption.includes("TimeStamp"),
+  });
 
   const {
     startRecording,
@@ -52,7 +57,10 @@ const AudioWaveform = () => {
     dataArrayRef,
     analyserRef,
   } = useRecorder({
-    transcribeApi: isStream ? transcribeStreamApi : transcribeApi,
+    transcribeApi: isOption.includes("StreamApi")
+      ? transcribeStreamApi
+      : transcribeApi,
+    timeStamp: isOption.includes("TimeStamp"),
   });
 
   const drawWaveform = useCallback(() => {
@@ -129,10 +137,10 @@ const AudioWaveform = () => {
       <div>
         <h2 className="font-mono text-2xl my-2">Audio Recorder</h2>
         <div className="flex my-2 justify-end">
-          <SwitchStream
-            isStream={isStream}
-            setIsStream={setIsStream}
-          ></SwitchStream>
+          <ToggleEventOption
+            isOption={isOption}
+            setIsOption={setIsOption}
+          ></ToggleEventOption>
         </div>
         <canvas
           ref={canvasRef}

@@ -29,15 +29,21 @@ pipe = pipeline(
     batch_size=16,
 )
 
-def transcribe_audio(audio_data, sampling_rate):
+def transcribe_audio(audio_data, sampling_rate,return_timestamps=False):
     try:
         input_data = {
             "raw": audio_data,
             "sampling_rate": sampling_rate
         }
-        result = pipe(input_data,return_timestamps=True)
-        # or can return result["text"]
-        return result["chunks"]
+        result = pipe(input_data,return_timestamps=return_timestamps)
+        print("===== TRANSCRIPTION RESULT =====")
+        print(result)
+        if "chunks" in result:
+            return result["chunks"]
+        elif "text" in result:
+            return result["text"] 
+        else:
+            raise ValueError("Unexpected transcription result format.")
     except Exception as e:
         print(f"Error during transcription: {str(e)}")
         return None

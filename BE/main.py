@@ -119,7 +119,7 @@ async def transcribe_streaming(audio_segment):
 
 
 @app.post("/transcribe-stream")
-async def transcribe(file: UploadFile = File(...)):
+async def transcribe(file: UploadFile = File(...),return_timestamps: bool = Form(False)):
     try:
         print("===== FILE INFO =====")
         print(f"Received file: {file.filename}, Content Type: {file.content_type}")
@@ -131,7 +131,9 @@ async def transcribe(file: UploadFile = File(...)):
         audio = audio.set_frame_rate(16000)
         print("===== STARTING STREAMING TRANSCRIPTION =====")
         audio_data = np.array(audio.get_array_of_samples()).astype(np.float32) / 32768.0
-        transcription = transcribe_audio(audio_data, sampling_rate=16000)
+        transcription = transcribe_audio(audio_data, sampling_rate=16000,return_timestamps=return_timestamps)
+        print("===== STREAMING TRANSCRIPTION COMPLETED =====")
+        print(f"transcription: {transcription} ")
         # 使用 SSE 流式返回转录结果
         return StreamingResponse(transcribe_streaming(transcription), media_type="text/event-stream")
     
@@ -153,7 +155,7 @@ async def transcribe(file: UploadFile = File(...)):
 
 
 @app.post("/transcribe")
-async def transcribe(file: UploadFile = File(...)):
+async def transcribe(file: UploadFile = File(...),return_timestamps: bool = Form(False)):
     try:
         # Print file info with clear separators
         print("===== FILE INFO =====")
@@ -168,10 +170,10 @@ async def transcribe(file: UploadFile = File(...)):
         audio = audio.set_frame_rate(16000)
         print("===== CONVERTING AUDIO TO NUMPY ARRAY =====")
         audio_data = np.array(audio.get_array_of_samples()).astype(np.float32) / 32768.0
-
+        print(f"return_timestamps: {return_timestamps} ")
         # Transcribe audio
-        transcription = transcribe_audio(audio_data, sampling_rate=16000)
-
+        transcription = transcribe_audio(audio_data, sampling_rate=16000,return_timestamps=return_timestamps)
+        print(f"transcription: {transcription} ")
         if transcription:
             print("===== TRANSCRIPTION SUCCESSFUL =====")
             print(f"Transcription: {transcription}")
