@@ -28,7 +28,7 @@ install_fe:
 
 # Run backend
 backend:
-	cd $(BE_DIR) && bash -c "source venv/bin/activate && uvicorn main:app --reload"
+	cd $(BE_DIR) && bash -c "source venv/bin/activate && uvicorn main:app --reload --workers 10"
 
 
 # Run frontend

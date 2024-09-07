@@ -49,7 +49,8 @@ export default function useStreamApi({ setText, timeStamp }: StreamApiProps) {
             const data: {
               transcription: { timestamp: [number, number]; text: string };
             } = JSON.parse(rawChunk);
-            if (data.transcription) {
+            console.log(data);
+            if (data.transcription && timeStamp) {
               const { timestamp, text } = data.transcription;
               const time = `(${
                 timestamp[0] !== null ? timestamp[0].toFixed(2) : "Unknown"
@@ -57,7 +58,7 @@ export default function useStreamApi({ setText, timeStamp }: StreamApiProps) {
                 timestamp[1] !== null ? timestamp[1].toFixed(2) : "Unknown"
               }s)`;
               setText((prevText) => prevText + `\n${time}: ${text}`);
-            } else if (!timeStamp && typeof data.transcription === "string") {
+            } else if (!timeStamp && typeof data.transcription) {
               setText((prevText) => prevText + `${data.transcription}`);
             } else {
               console.error(
