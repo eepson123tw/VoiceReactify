@@ -4,19 +4,17 @@ import json
 import uuid
 from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
-from fastapi.responses import FileResponse, StreamingResponse,JSONResponse
+from fastapi.responses import StreamingResponse,JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import torch
-from parler_tts import ParlerTTSForConditionalGeneration
-from transformers import AutoTokenizer
 import soundfile as sf
-from io import BytesIO
 import numpy as np
+import asyncio
 from pydub import AudioSegment
-from pydantic import BaseModel
+
+from TTS.api import TTS
 from src.voice_model import transcribe_audio
 from src.read_service_config import check_system_resources
-
 
 app = FastAPI()
 
@@ -36,77 +34,51 @@ app.add_middleware(
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
 
-# Load model and tokenizer
-print("Loading model...")
-model = ParlerTTSForConditionalGeneration.from_pretrained("parler-tts/parler-tts-mini-v1").to(device)
-print("Model loaded successfully.")
 
-print("Loading tokenizer...")
-tokenizer = AutoTokenizer.from_pretrained("parler-tts/parler-tts-mini-v1")
-print("Tokenizer loaded successfully.")
+
+
+# Get device
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+# List available 🐸TTS models
+print(TTS().list_models())
+
+# Init TTS
+tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
 
 outfile_dir = "outVoiceFile"
 os.makedirs(outfile_dir, exist_ok=True)
 
+
 @app.post("/generate-voice")
-async def generate_voice(prompt: str = Form(...), description: str = Form(...)):
+async def generate_voice(
+    prompt: str = Form(...), 
+    description: str = Form(...),
+):
     try:
+        # Log the inputs
         print(f"Received prompt: {prompt}")
         print(f"Received description: {description}")
-
-        # Limit the length of the description and prompt text
-        max_length = 128
-        description = description[:max_length]
-        prompt = prompt[:max_length]
-        print(f"Truncated description: {description}")
-        print(f"Truncated prompt: {prompt}")
-
-        # Tokenize inputs
-        print("Tokenizing inputs...")
-        encoded_input = tokenizer(description, return_tensors="pt", padding=True, truncation=True, max_length=max_length)
-        input_ids = encoded_input.input_ids.to(device)
-        attention_mask = encoded_input.attention_mask.to(device)
-
-        prompt_encoded = tokenizer(prompt, return_tensors="pt", padding=True, truncation=True, max_length=max_length)
-        prompt_input_ids = prompt_encoded.input_ids.to(device)
-        prompt_attention_mask = prompt_encoded.attention_mask.to(device)
-        print("Inputs tokenized successfully.")
-
-        # Generate speech with attention mask
-        print("Generating speech...")
-        generation = model.generate(
-            input_ids=input_ids, 
-            attention_mask=attention_mask,
-            prompt_input_ids=prompt_input_ids, 
-            prompt_attention_mask=prompt_attention_mask,
-            max_length=200 
-        )
-        print("Speech generated successfully.")
-
-        # Convert the generated output to audio array
-        audio_arr = generation.cpu().numpy().squeeze()
-
         # Create a unique file name with timestamp and UUID
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         unique_id = uuid.uuid4()
         output_filename = f"parler_tts_{timestamp}_{unique_id}.wav"
         output_path = os.path.join(outfile_dir, output_filename)
+        pakora_path = os.path.join('pekora', "pekora.wav")
 
-        # Save the generated audio file
-        print(f"Saving output to {output_path}...")
-        sf.write(output_path, audio_arr, model.config.sampling_rate)
-        print(f"Output saved to {output_path}.")
+        tts.tts_to_file(prompt, speaker_wav=pakora_path, language="en", file_path=output_path)
 
-        # Return the generated audio file
+        # Generator to stream the file
         def iterfile():
             with open(output_path, mode="rb") as file_like:
                 yield from file_like
 
-        print("Returning generated file...")
+        # Return the generated audio file as a stream
         return StreamingResponse(iterfile(), media_type="audio/wav", headers={"Content-Disposition": f"attachment; filename={output_filename}"})
+
     except Exception as e:
-        print(f"Error occurred: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
@@ -123,11 +95,10 @@ async def transcribe(file: UploadFile = File(...),return_timestamps: bool = Form
     try:
         print("===== FILE INFO =====")
         print(f"Received file: {file.filename}, Content Type: {file.content_type}")
-        
+
         audio = AudioSegment.from_file(file.file)
         print("===== AUDIO INFO =====")
         print(f"Audio duration: {audio.duration_seconds} seconds, Channels: {audio.channels}")
-
         audio = audio.set_frame_rate(16000)
         print("===== STARTING STREAMING TRANSCRIPTION =====")
         audio_data = np.array(audio.get_array_of_samples()).astype(np.float32) / 32768.0
@@ -161,6 +132,11 @@ async def transcribe(file: UploadFile = File(...),return_timestamps: bool = Form
         print("===== FILE INFO =====")
         print(f"Received file: {file.filename}, Content Type: {file.content_type}")
         
+        #file
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        unique_id = uuid.uuid4()
+        output_filename = f"parler_tts_{timestamp}_{unique_id}.wav"
+        output_path = os.path.join(outfile_dir, output_filename)
         # Load the uploaded audio file
         audio = AudioSegment.from_file(file.file)
         print("===== AUDIO INFO =====")

@@ -24,7 +24,7 @@ const AudioWaveform = () => {
       },
       body: new URLSearchParams({
         prompt: text,
-        description: "This is a test description",
+        description: "You are a voice model",
       }),
     })
       .then((response) => {

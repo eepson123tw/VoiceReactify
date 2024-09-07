@@ -64,10 +64,10 @@ function App() {
   }, [getSystemInfoCB]);
 
   return (
-    <>
+    <div className="bg-white/60  rounded ">
       <AlertSystemInfo isAlert={isSystemCompatible}></AlertSystemInfo>
       <AudioWaveform></AudioWaveform>
-    </>
+    </div>
   );
 }
 
