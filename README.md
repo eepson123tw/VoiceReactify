@@ -1,6 +1,8 @@
 # VoiceReactify
 
 VoiceReactify is a React-based application that integrates audio processing with Text-to-Speech (TTS) functionalities. This project allows users to record audio, transcribe it into text using AI models, and optionally convert the text back into speech.
+![record](https://github.com/user-attachments/assets/191c324c-0ec4-4e3b-9a96-e3e48dceb5df)
+
 
 ## Features
 
