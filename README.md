@@ -3,7 +3,6 @@
 VoiceReactify is a React-based application that integrates audio processing with Text-to-Speech (TTS) functionalities. This project allows users to record audio, transcribe it into text using AI models, and optionally convert the text back into speech.
 ![record](https://github.com/user-attachments/assets/191c324c-0ec4-4e3b-9a96-e3e48dceb5df)
 
-
 ## Features
 
 - **Audio Recording:** Capture audio directly from the browser.
@@ -44,6 +43,21 @@ Make sure you have the following installed:
    pip install -r requirements.txt
 
    pip download -r requirements_cuda.txt -d ./packages   #for the load local packages
+
+   # need to change this because need to download
+
+   @staticmethod
+   def ask_tos(model_full_path):
+      """Automatically agree to the terms of service"""
+      tos_path = os.path.join(model_full_path, "tos_agreed.txt")
+      print(" > Automatically agreeing to the terms of service:")
+      print(' | > "I have purchased a commercial license from Coqui: licensing@coqui.ai"')
+      print(' | > "Otherwise, I agree to the terms of the non-commercial CPML: https://coqui.ai/cpml"')
+      # 自动同意许可协议
+      with open(tos_path, "w", encoding="utf-8") as f:
+         f.write("I have read, understood and agreed to the Terms and Conditions.")
+      return True
+
    ```
 
 ### Running the Application

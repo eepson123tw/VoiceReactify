@@ -1,23 +1,23 @@
 import os
 import sqlite3
 from rich.console import Console
-
-console = Console()
+from dotenv import load_dotenv
 
 # SQLite connection function
+# Load environment variables from .env file
+console = Console()
+load_dotenv()
+
 def create_connection():
     conn = None
     try:
-        # Get the absolute path
-        db_path = os.path.abspath('./db/voiceRecord.sqlite')  
-        console.print(f"[bold cyan]Database path:[/bold cyan] {db_path}")
-        
-        # Establish connection to SQLite database
+        db_path = os.getenv('DB_PATH', './db/voiceRecord.sqlite')
+        print(f"Database path: {db_path}")
         conn = sqlite3.connect(db_path)
-        console.print("[green]Connection successful[/green]")
+        print("Connection successful")
         return conn
     except sqlite3.Error as e:
-        console.print(f"[bold red]Error connecting to database:[/bold red] {e}")
+        print(f"Error connecting to database: {e}")
         return None
 
 # Table creation function

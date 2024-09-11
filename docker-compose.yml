@@ -15,3 +15,9 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
+    volumes:
+      - ./model_cache:/app/model_cache
+      - ./BE/db:/app/db # Mount the DB directory
+    environment:
+      - DB_PATH=/app/db/voiceRecord.sqlite # Set the Docker-specific path for SQLite
+      - COQUI_LICENSE_AGREEMENT=y # Accept the Coqui license agreement automatically (if supported)

@@ -2,6 +2,7 @@ import os
 import asyncio
 import json
 import uuid
+from rich.console import Console
 from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -19,6 +20,8 @@ from src.voice_model import transcribe_audio
 from src.read_service_config import check_system_resources
 from src.connectionDB import create_connection, create_voice_record_table
 
+
+
 class AddPermissionsPolicyMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
@@ -27,8 +30,11 @@ class AddPermissionsPolicyMiddleware(BaseHTTPMiddleware):
         return response
 
 
+console = Console()
+
 # Lifespan function using async context manager
 async def lifespan(app: FastAPI):
+    console.print("[cyan]Starting application...[/cyan]")
     conn = create_connection()
     if conn:
         create_voice_record_table(conn)
@@ -37,15 +43,12 @@ async def lifespan(app: FastAPI):
     # Cleanup logic if needed
 
 
-
-
 app = FastAPI(lifespan=lifespan)
-
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173","https://dedb-220-134-96-218.ngrok-free.app"],  # 允許的來源應包括你的前端地址
+    allow_origins=["http://localhost:5173"],  # 允許的來源應包括你的前端地址
     allow_credentials=True,
     allow_methods=["*"],  # 允許的HTTP方法
     allow_headers=["*"],  # 允許的HTTP標頭
