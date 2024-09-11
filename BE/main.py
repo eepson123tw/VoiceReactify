@@ -4,6 +4,8 @@ import json
 import uuid
 from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import StreamingResponse,JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import torch
@@ -16,18 +18,26 @@ from TTS.api import TTS
 from src.voice_model import transcribe_audio
 from src.read_service_config import check_system_resources
 
+class AddPermissionsPolicyMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        # Add the Permissions-Policy header
+        response.headers["Permissions-Policy"] = "browsing-topics, private-state-token-redemption, private-state-token-issuance"
+        return response
+
+
 app = FastAPI()
 
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # 允許的來源應包括你的前端地址
+    allow_origins=["http://localhost:5173","https://dedb-220-134-96-218.ngrok-free.app"],  # 允許的來源應包括你的前端地址
     allow_credentials=True,
     allow_methods=["*"],  # 允許的HTTP方法
     allow_headers=["*"],  # 允許的HTTP標頭
 )
-
+app.add_middleware(AddPermissionsPolicyMiddleware)
 
 
 # Check if GPU is available
@@ -105,7 +115,6 @@ async def transcribe(file: UploadFile = File(...),return_timestamps: bool = Form
         transcription = transcribe_audio(audio_data, sampling_rate=16000,return_timestamps=return_timestamps)
         print("===== STREAMING TRANSCRIPTION COMPLETED =====")
         print(f"transcription: {transcription} ")
-        # 使用 SSE 流式返回转录结果
         return StreamingResponse(transcribe_streaming(transcription), media_type="text/event-stream")
     
     except MemoryError as me:
