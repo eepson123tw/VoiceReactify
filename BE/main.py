@@ -17,6 +17,7 @@ from pydub import AudioSegment
 from TTS.api import TTS
 from src.voice_model import transcribe_audio
 from src.read_service_config import check_system_resources
+from src.connectionDB import create_connection, create_voice_record_table
 
 class AddPermissionsPolicyMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
@@ -26,7 +27,19 @@ class AddPermissionsPolicyMiddleware(BaseHTTPMiddleware):
         return response
 
 
-app = FastAPI()
+# Lifespan function using async context manager
+async def lifespan(app: FastAPI):
+    conn = create_connection()
+    if conn:
+        create_voice_record_table(conn)
+        conn.close()
+    yield  # This allows the app to continue running
+    # Cleanup logic if needed
+
+
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 # Add CORS middleware
@@ -39,13 +52,9 @@ app.add_middleware(
 )
 app.add_middleware(AddPermissionsPolicyMiddleware)
 
-
 # Check if GPU is available
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
-
-
-
 
 # Get device
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -190,6 +199,8 @@ async def check_system():
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Parler TTS API! Use the /generate-voice/ endpoint to generate speech."}
+
+
 
 if __name__ == "__main__":
     import uvicorn
