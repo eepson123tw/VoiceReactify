@@ -7,7 +7,7 @@ from datetime import datetime
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi.responses import StreamingResponse,JSONResponse
+from fastapi.responses import StreamingResponse,JSONResponse,HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 import torch
 import soundfile as sf
@@ -19,6 +19,7 @@ from TTS.api import TTS
 from src.voice_model import transcribe_audio
 from src.read_service_config import check_system_resources
 from src.connectionDB import create_connection, create_voice_record_table
+from src.welcomePage import welcomePageTemplate
 
 
 
@@ -59,10 +60,7 @@ app.add_middleware(AddPermissionsPolicyMiddleware)
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
 
-# Get device
-device = "cuda" if torch.cuda.is_available() else "cpu"
-
-# List available 🐸TTS models
+# List available 🐸 TTS models
 print(TTS().list_models())
 
 # Init TTS
@@ -87,17 +85,13 @@ async def generate_voice(
         output_filename = f"parler_tts_{timestamp}_{unique_id}.wav"
         output_path = os.path.join(outfile_dir, output_filename)
         pakora_path = os.path.join('pekora', "pekora.wav")
-
         tts.tts_to_file(prompt, speaker_wav=pakora_path, language="en", file_path=output_path)
-
         # Generator to stream the file
         def iterfile():
             with open(output_path, mode="rb") as file_like:
                 yield from file_like
-
         # Return the generated audio file as a stream
         return StreamingResponse(iterfile(), media_type="audio/wav", headers={"Content-Disposition": f"attachment; filename={output_filename}"})
-
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -157,7 +151,7 @@ async def transcribe(file: UploadFile = File(...),return_timestamps: bool = Form
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         unique_id = uuid.uuid4()
         output_filename = f"parler_tts_{timestamp}_{unique_id}.wav"
-        output_path = os.path.join(outfile_dir, output_filename)
+        # output_path = os.path.join(outfile_dir, output_filename)
         # Load the uploaded audio file
         audio = AudioSegment.from_file(file.file)
         print("===== AUDIO INFO =====")
@@ -199,10 +193,9 @@ async def check_system():
     return JSONResponse(content=result.dict())
 
 
-@app.get("/")
-async def root():
-    return {"message": "Welcome to the Parler TTS API! Use the /generate-voice/ endpoint to generate speech."}
-
+@app.get("/", response_class=HTMLResponse)
+def root():
+    return welcomePageTemplate()
 
 
 if __name__ == "__main__":
