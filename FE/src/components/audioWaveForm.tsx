@@ -17,7 +17,7 @@ const AudioWaveform = () => {
   );
 
   const playVoice = () => {
-    fetch("http://localhost:8000/generate-voice", {
+    fetch("http://localhost:8000/tts/generate-voice", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

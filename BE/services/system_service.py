@@ -1,8 +1,13 @@
+import logging
+
 import psutil
 import platform
 import torch
 from pydantic import BaseModel
 import time
+
+
+logger = logging.getLogger(__name__)
 
 class SystemCheckResponse(BaseModel):
     cpu_count: int
@@ -33,6 +38,7 @@ def check_system_resources(samples=2):
 
     # 檢查是否有 GPU（如果需要 GPU 支援）
     has_gpu = torch.cuda.is_available()
+    logger.info("Checking system resources.")
 
     # 根據條件檢查是否符合要求
     is_compatible = (
@@ -51,4 +57,7 @@ def check_system_resources(samples=2):
         has_gpu=has_gpu,
         is_compatible=is_compatible
     )
+
+
+
 

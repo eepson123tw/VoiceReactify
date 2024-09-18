@@ -44,7 +44,7 @@ function AlertSystemInfo({ isAlert }: { isAlert: boolean }) {
 function App() {
   const [isSystemCompatible, setIsSystemCompatible] = useState<boolean>(false);
   const getSystemInfo = async (): Promise<SystemInfo> => {
-    const res = await fetch("http://localhost:8000/checkSystem");
+    const res = await fetch("http://localhost:8000/system/resources");
     const data = await res.json();
     return data;
   };

@@ -20,7 +20,7 @@ export default function useStreamApi({ setText, timeStamp }: StreamApiProps) {
     async (formData: FormData) => {
       try {
         const uploadResponse = await fetch(
-          "http://localhost:8000/transcribe-stream",
+          "http://localhost:8000/transcription/transcribe-stream",
           {
             method: "POST",
             body: formData,
@@ -79,10 +79,13 @@ export default function useStreamApi({ setText, timeStamp }: StreamApiProps) {
   const transcribeApi = useCallback(
     async (formData: FormData) => {
       try {
-        const response = await fetch("http://localhost:8000/transcribe", {
-          method: "POST",
-          body: formData,
-        });
+        const response = await fetch(
+          "http://localhost:8000/transcription/transcribe",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
