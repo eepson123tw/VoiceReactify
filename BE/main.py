@@ -6,7 +6,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from rich.console import Console
 
-from routers import tts, transcription, system, welcome
+from routers import tts, transcription, system, welcome,voice_records
 from middleware.permissions import AddPermissionsPolicyMiddleware
 from services.db import initialize_database
 from services.tts_service import initialize_tts
@@ -48,6 +48,7 @@ app.include_router(welcome.router)
 app.include_router(tts.router, prefix="/tts", tags=["TTS"])
 app.include_router(transcription.router, prefix="/transcription", tags=["Transcription"])
 app.include_router(system.router, prefix="/system", tags=["System"])
+app.include_router(voice_records.router, prefix="/api")
 
 # Optional: Root endpoint if not handled by welcome.router
 @app.get("/", response_class=HTMLResponse)

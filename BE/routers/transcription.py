@@ -206,10 +206,16 @@ async def transcribe(
 
         if transcription:
             logger.info("===== TRANSCRIPTION SUCCESSFUL =====")
+            if return_timestamps:
+            # return_timestamps 為 True，transcription 是字典列表，提取文本
+                transcription_texts = [item['text'] for item in transcription]
+                transcription_str = '\n'.join(transcription_texts)
+            else:
+                # return_timestamps 為 False，transcription 是純文本字串
+                transcription_str = transcription
 
-            # 將轉譯結果存入檔案
             with open(output_path, 'w', encoding='utf-8') as f:
-                f.write(transcription)
+                f.write(transcription_str)
 
             # 將轉譯結果存入資料庫
             conn = create_connection()
@@ -223,7 +229,7 @@ async def transcribe(
                 "duration": audio.duration_seconds,
                 "size": os.path.getsize(output_path),
                 "filepath": output_path,
-                "transcript": transcription,  # 轉譯文字
+                "transcript": transcription_str,  # 轉譯文字
                 "language": "en",  # 根據需求設置語言
                 "status": "completed",
                 "error_message": None,
