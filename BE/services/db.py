@@ -1,7 +1,7 @@
 import os
 import sqlite3
 import logging
-from src.connectionDB import create_connection, create_voice_record_table
+from src.connectionDB import create_connection, create_tables
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +10,7 @@ def initialize_database():
     conn = create_connection()
     if conn:
         logger.info("Creating voice record table if not exists.")
-        create_voice_record_table(conn)
+        create_tables(conn)
         conn.close()
         logger.info("Database initialized successfully.")
     else:
