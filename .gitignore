@@ -16,6 +16,9 @@ ENV/
 .Python
 migrations/
 
+BE/outVoiceFile
+BE/transcriptions
+
 # Ignore the packages directory
 packages/
 

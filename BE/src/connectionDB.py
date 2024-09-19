@@ -49,7 +49,8 @@ def create_tables(conn):
                 transcript TEXT,
                 language TEXT,
                 status TEXT DEFAULT 'pending',
-                error_message TEXT
+                error_message TEXT,
+                parent_id INTEGER REFERENCES voice_record(id) ON DELETE CASCADE
             );
         ''')
 
@@ -62,6 +63,9 @@ def create_tables(conn):
         if 'error_message' not in columns:
             cursor.execute("ALTER TABLE voice_record ADD COLUMN error_message TEXT;")
             console.print("[green]Added 'error_message' column to 'voice_record' table.[/green]")
+        if 'parent_id' not in columns:
+            cursor.execute("ALTER TABLE voice_record ADD COLUMN parent_id INTEGER REFERENCES voice_record(id) ON DELETE CASCADE;")
+            console.print("[green]Added 'parent_id' column to 'voice_record' table.[/green]")
         
         # 創建索引
         cursor.executescript('''
@@ -98,7 +102,6 @@ def create_tables(conn):
 def create_voice_record(conn, record):
     """
     將一條語音記錄插入到 voice_record 表格中。
-
     :param conn: SQLite 資料庫連接物件
     :param record: 字典，包含以下鍵值：
         - filename (str): 檔案名稱
@@ -110,11 +113,12 @@ def create_voice_record(conn, record):
         - language (str): 語言
         - status (str): 狀態
         - error_message (str): 錯誤訊息
+        - parent_id (int): 原始語音檔案的 ID（可選）
     :return: 新插入的語音記錄的 ID 或 None
     """
     sql = '''
-        INSERT INTO voice_record (filename, filetype, duration, size, filepath, transcript, language, status, error_message)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO voice_record (filename, filetype, duration, size, filepath, transcript, language, status, error_message, parent_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     '''
     try:
         cursor = conn.cursor()
@@ -127,7 +131,8 @@ def create_voice_record(conn, record):
             record.get('transcript'),
             record.get('language'),
             record.get('status'),
-            record.get('error_message')
+            record.get('error_message'),
+            record.get('parent_id')  # 可選
         ))
         conn.commit()
         voice_record_id = cursor.lastrowid
@@ -144,7 +149,6 @@ def create_voice_record(conn, record):
 def create_tag(conn, tag):
     """
     將一個標籤插入到 tags 表格中。如果標籤已存在，返回其 ID。
-
     :param conn: SQLite 資料庫連接物件
     :param tag: 標籤名稱 (str)
     :return: 標籤的 ID 或 None
@@ -180,7 +184,6 @@ def create_tag(conn, tag):
 def associate_tag_with_voice_record(conn, voice_record_id, tag_id):
     """
     將標籤與語音記錄進行關聯。
-
     :param conn: SQLite 資料庫連接物件
     :param voice_record_id: 語音記錄的 ID (int)
     :param tag_id: 標籤的 ID (int)

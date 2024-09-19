@@ -17,14 +17,15 @@ logger = logging.getLogger(__name__)
 async def generate_voice_endpoint(
     prompt: str = Form(...),
     description: str = Form(...),
-    tags: str = Form(None)  # 可選的標籤參數
+    tags: str = Form(None),  # 可選的標籤參數
+    original_record_id: int = Form(...),  # 新增參數，關聯轉譯記錄
 ):
     """
     生成語音檔案並將相關資訊寫入資料庫。
-
     :param prompt: 用戶輸入的文字提示
     :param description: 描述或轉譯文字
     :param tags: 逗號分隔的標籤字串（可選）
+    :param original_record_id: 轉譯記錄的 ID，用於關聯
     :return: 語音檔案的串流響應
     """
     conn = None
@@ -35,6 +36,7 @@ async def generate_voice_endpoint(
         logger.info(f"Received prompt: {prompt}")
         logger.info(f"Received description: {description}")
         logger.info(f"Received tags: {tags}")
+        logger.info(f"Original Record ID: {original_record_id}")
 
         # 生成唯一檔名
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -66,7 +68,7 @@ async def generate_voice_endpoint(
         if not conn:
             raise HTTPException(status_code=500, detail="Database connection failed")
 
-        # 準備記錄資料，不包含 tags
+        # 準備記錄資料
         record = {
             "filename": output_filename,
             "filetype": "audio/wav",
@@ -76,7 +78,8 @@ async def generate_voice_endpoint(
             "transcript": description,  # 假設 description 為轉譯文字
             "language": "zh-TW",  # 根據需求設置語言
             "status": "completed",
-            "error_message": None
+            "error_message": None,
+            "parent_id": original_record_id  # 關聯轉譯記錄
         }
 
         # 插入 voice_record 表格
