@@ -133,9 +133,9 @@ const AudioWaveform = () => {
   }, [isRecording, drawWaveform]);
 
   return (
-    <div className="shadow-xl  px-4 py-6 rounded">
+    <div className="px-4 py-6">
       <div>
-        <h2 className="font-mono text-2xl my-2">Audio Recorder</h2>
+        <h2 className="font-mono text-2xl my-2">VoiceReactify</h2>
         <div className="flex my-2 justify-end">
           <ToggleEventOption
             isOption={isOption}
