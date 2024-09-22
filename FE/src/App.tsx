@@ -3,6 +3,7 @@ import "./App.css";
 import { useCallback, useEffect, useState } from "react";
 
 import AudioWaveform from "@/components/audioWaveForm";
+import AudioTable from "@/components/audioTable";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -77,15 +78,18 @@ function App() {
         }
       >
         <TabsList>
-          <TabsTrigger value="record">Record</TabsTrigger>
-          <TabsTrigger value="table">Table</TabsTrigger>
+          <TabsTrigger value="record">VoiceReactify</TabsTrigger>
+          <TabsTrigger value="table">Record Table</TabsTrigger>
         </TabsList>
-        <TabsContent value="record">Record</TabsContent>
-        <TabsContent value="table">Table</TabsContent>
+        <TabsContent value="record">
+          Record your voice and get the text!
+        </TabsContent>
+        <TabsContent value="table">
+          The list of your record! Check it out!
+        </TabsContent>
       </Tabs>
-      <div className="bg-white/60 shadow-xl  rounded-xl">
+      <div className="bg-white/70 shadow-xl  rounded-xl">
         <AlertSystemInfo isAlert={isSystemCompatible}></AlertSystemInfo>
-
         <AnimatePresence mode="wait">
           <motion.div
             key={viewStatus}
@@ -94,10 +98,10 @@ function App() {
             exit={{ y: -10, opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {viewStatus === "record" && <AudioWaveform></AudioWaveform>}
-            {viewStatus === "table" && (
-              <div className="w-[636px] h-[658px]">Table</div>
-            )}
+            <div className="w-[450px] sm:w-[650px] lg:w-[700px]  h-[658px] overflow-y-auto">
+              {viewStatus === "record" && <AudioWaveform></AudioWaveform>}
+              {viewStatus === "table" && <AudioTable></AudioTable>}
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>

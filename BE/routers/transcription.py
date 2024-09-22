@@ -9,6 +9,7 @@ import aiofiles # type: ignore
 from datetime import datetime
 import uuid
 import os
+import json
 import sqlite3  # 確保引入 sqlite3
 
 logger = logging.getLogger(__name__)
@@ -101,7 +102,11 @@ async def transcribe_stream(
                             (chunk, os.path.getsize(output_path), voice_record_id)
                         )
                         conn.commit()
-                        yield chunk  # 只回傳 chunk，不改變結構
+                        data = {
+                            "voice_record_id": voice_record_id,
+                            "chunk": chunk
+                        }
+                        yield f"data: {json.dumps(data)}\n\n"  # SSE 格式
                         
                 # 最後更新狀態為 'completed'
                 cursor = conn.cursor()

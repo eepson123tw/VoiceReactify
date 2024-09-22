@@ -25,6 +25,7 @@ const AudioWaveform = () => {
       body: new URLSearchParams({
         prompt: text,
         description: "You are a voice model",
+        original_record_id: localStorage.getItem("record_id") || "",
       }),
     })
       .then((response) => {
@@ -142,12 +143,12 @@ const AudioWaveform = () => {
             setIsOption={setIsOption}
           ></ToggleEventOption>
         </div>
-        <canvas
-          ref={canvasRef}
-          width="600"
-          height="200"
-          className=" border-black border-2 mb-4"
-        ></canvas>
+        <div className="mb-4 w-full">
+          <canvas
+            ref={canvasRef}
+            className=" border-black border-2 w-full h-40"
+          ></canvas>
+        </div>
         <RecordButton
           record={isRecording ? stopRecording : startRecording}
           isRecording={isRecording}

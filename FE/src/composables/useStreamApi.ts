@@ -8,9 +8,11 @@ interface StreamApiProps {
 type Transcription<T> = T extends true
   ? {
       transcription: { timestamp: [number, number]; text: string }[];
+      record_id: number;
     }
   : {
       transcription: string;
+      record_id: number;
     };
 
 export default function useStreamApi({ setText, timeStamp }: StreamApiProps) {
@@ -18,6 +20,7 @@ export default function useStreamApi({ setText, timeStamp }: StreamApiProps) {
 
   const transcribeStreamApi = useCallback(
     async (formData: FormData) => {
+      localStorage.removeItem("record_id");
       try {
         const uploadResponse = await fetch(
           "http://localhost:8000/transcription/transcribe-stream",
@@ -45,11 +48,16 @@ export default function useStreamApi({ setText, timeStamp }: StreamApiProps) {
           const chunk = decoder.decode(value, { stream: true });
 
           try {
-            const rawChunk = chunk.trim().replace(/^data: /, "");
+            const transcribeChunk = chunk.trim().replace(/^data: /, "");
+            const rawChunkJson = JSON.parse(transcribeChunk);
+            const rawChunkJsonTranscription = JSON.parse(
+              rawChunkJson.chunk.trim().replace(/^data: /, "")
+            );
+
             const data: {
               transcription: { timestamp: [number, number]; text: string };
-            } = JSON.parse(rawChunk);
-            console.log(data);
+            } = rawChunkJsonTranscription;
+            localStorage.setItem("record_id", rawChunkJson.voice_record_id);
             if (data.transcription && timeStamp) {
               const { timestamp, text } = data.transcription;
               const time = `(${
@@ -78,6 +86,7 @@ export default function useStreamApi({ setText, timeStamp }: StreamApiProps) {
 
   const transcribeApi = useCallback(
     async (formData: FormData) => {
+      localStorage.removeItem("record_id");
       try {
         const response = await fetch(
           "http://localhost:8000/transcription/transcribe",
@@ -93,6 +102,7 @@ export default function useStreamApi({ setText, timeStamp }: StreamApiProps) {
 
         const data: CurrentTranscription = await response.json();
         setText("");
+        localStorage.setItem("record_id", data.record_id.toString());
 
         if (timeStamp && Array.isArray(data.transcription)) {
           data.transcription.forEach(({ timestamp, text }) => {

@@ -75,7 +75,7 @@ async def generate_voice_endpoint(
             "duration": duration,
             "size": file_size,
             "filepath": output_path,
-            "transcript": description,  # 假設 description 為轉譯文字
+            "transcript": prompt,  # prompt 為轉譯文字
             "language": "zh-TW",  # 根據需求設置語言
             "status": "completed",
             "error_message": None,
