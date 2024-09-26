@@ -35,7 +35,7 @@ async def transcribe_stream(
         logger.info("===== FILE INFO =====")
         logger.info(f"Received file: {file.filename}, Content Type: {file.content_type}")
 
-        # 生成唯一檔名
+        # 生成唯一檔名 文字
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         unique_id = uuid.uuid4()
         output_filename = f"transcription_{timestamp}_{unique_id}.txt"
@@ -43,15 +43,32 @@ async def transcribe_stream(
         output_dir = os.path.join("transcriptions", date_str)  # 確保與 TTS 的 outVoiceFile 不同
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, output_filename)
+    
+        # 組合新的檔名，包含唯一識別碼和原始檔名
+        origin_filename = f"transcription_{timestamp}_{unique_id}.wav"
+        date_str = datetime.now().strftime("%Y/%m/%d")
+        origin_dir = os.path.join("originVoice", date_str)
+        os.makedirs(origin_dir, exist_ok=True)
+        origin_path = os.path.join(origin_dir, origin_filename)
 
+    
         # 讀取音頻文件
         audio = AudioSegment.from_file(file.file)
         logger.info("===== AUDIO INFO =====")
         logger.info(f"Audio duration: {audio.duration_seconds} seconds, Channels: {audio.channels}")
-        audio = audio.set_frame_rate(16000)
+        # 設置採樣率為16kHz，單聲道
+        audio = audio.set_frame_rate(16000).set_channels(1)
+        logger.info("===== CONVERTING AUDIO TO WAV FORMAT =====")
 
-        logger.info("===== STARTING STREAMING TRANSCRIPTION =====")
+        # 保存轉換後的音頻文件
+        converted_path = origin_path.replace(".wav", "_converted.wav")
+        audio.export(converted_path, format="wav")
+        logger.info(f"Converted audio saved to {converted_path}")
+
+        audio = audio.set_frame_rate(16000)
+        logger.info("===== CONVERTING AUDIO TO NUMPY ARRAY =====")
         audio_data = np.array(audio.get_array_of_samples()).astype(np.float32) / 32768.0
+        logger.info(f"return_timestamps: {return_timestamps}")
 
         # 開始轉譯
         transcription_generator = transcribe_audio_streaming(audio_data, sampling_rate=16000, return_timestamps=return_timestamps)
@@ -143,6 +160,8 @@ async def transcribe_stream(
     except Exception as e:
         logger.error(f"Error during transcription: {e}")
 
+        
+
         # 嘗試將狀態更新為錯誤
         if conn and voice_record_id:
             try:
@@ -196,14 +215,34 @@ async def transcribe(
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, output_filename)
 
+
+        # 組合新的檔名，包含唯一識別碼和原始檔名
+        origin_filename = f"transcription_{timestamp}_{unique_id}.wav"
+        date_str = datetime.now().strftime("%Y/%m/%d")
+        origin_dir = os.path.join("originVoice", date_str)
+        os.makedirs(origin_dir, exist_ok=True)
+        origin_path = os.path.join(origin_dir, origin_filename)
+
+    
         # 讀取音頻文件
         audio = AudioSegment.from_file(file.file)
         logger.info("===== AUDIO INFO =====")
         logger.info(f"Audio duration: {audio.duration_seconds} seconds, Channels: {audio.channels}")
+        # 設置採樣率為16kHz，單聲道
+        audio = audio.set_frame_rate(16000).set_channels(1)
+        logger.info("===== CONVERTING AUDIO TO WAV FORMAT =====")
+
+        # 保存轉換後的音頻文件
+        converted_path = origin_path.replace(".wav", "_converted.wav")
+        audio.export(converted_path, format="wav")
+        logger.info(f"Converted audio saved to {converted_path}")
+
+
         audio = audio.set_frame_rate(16000)
         logger.info("===== CONVERTING AUDIO TO NUMPY ARRAY =====")
         audio_data = np.array(audio.get_array_of_samples()).astype(np.float32) / 32768.0
         logger.info(f"return_timestamps: {return_timestamps}")
+
 
         # 進行轉譯
         transcription = transcribe_audio_single(audio_data, sampling_rate=16000, return_timestamps=return_timestamps)

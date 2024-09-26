@@ -1,10 +1,9 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException
 from typing import List
-import sqlite3
 import logging
 from pydantic import BaseModel
-from src.connectionDB import create_connection  
+from utils.dependencies import get_db, DatabaseError
+import sqlite3
 
 logger = logging.getLogger(__name__)
 
@@ -25,62 +24,29 @@ class VoiceRecord(BaseModel):
     error_message: str = None
     parent_id: int = None
 
-@router.get("/voice-records", response_model=List[VoiceRecord])
-async def get_all_voice_records():
-    logger.info("Fetching all voice records.")
-    conn = create_connection()
-    if conn is None:
-        logger.error("Failed to create database connection.")
-        raise HTTPException(status_code=500, detail="Database connection failed")
-    
+def fetch_all_records(conn: sqlite3.Connection, query: str, params: tuple = ()) -> List[dict]:
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM voice_record")
+        cursor.execute(query, params)
         rows = cursor.fetchall()
-        
-        # 獲取欄位名稱
         column_names = [description[0] for description in cursor.description]
-        
-        # 將資料轉換為字典列表
         records = [dict(zip(column_names, row)) for row in rows]
-        
-        # 關閉連接
-        conn.close()
-        
         return records
     except sqlite3.Error as e:
         logger.error(f"Database query failed: {e}")
-        conn.close()
-        raise HTTPException(status_code=500, detail="Database query failed")
+        raise DatabaseError("Database query failed")
 
-@router.get("/voice-records/{record_id}", response_model=VoiceRecord)
-async def get_voice_record(record_id: int):
+@router.get("/all", response_model=List[VoiceRecord])
+def get_all_voice_records(conn: sqlite3.Connection = Depends(get_db)):
+    logger.info("Fetching all voice records.")
+    records = fetch_all_records(conn, "SELECT * FROM voice_record")
+    return records
+
+@router.get("/{record_id}", response_model=VoiceRecord)
+def get_voice_record(record_id: int, conn: sqlite3.Connection = Depends(get_db)):
     logger.info(f"Fetching voice record with ID: {record_id}")
-    conn = create_connection()
-    if conn is None:
-        logger.error("Failed to create database connection.")
-        raise HTTPException(status_code=500, detail="Database connection failed")
-    
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM voice_record WHERE id = ?", (record_id,))
-        row = cursor.fetchone()
-        
-        if row is None:
-            conn.close()
-            logger.warning(f"Voice record with ID {record_id} not found.")
-            raise HTTPException(status_code=404, detail="Voice record not found")
-        
-        # 獲取欄位名稱
-        column_names = [description[0] for description in cursor.description]
-        
-        # 將資料轉換為字典
-        record = dict(zip(column_names, row))
-        
-        conn.close()
-        
-        return record
-    except sqlite3.Error as e:
-        logger.error(f"Database query failed: {e}")
-        conn.close()
-        raise HTTPException(status_code=500, detail="Database query failed")
+    records = fetch_all_records(conn, "SELECT * FROM voice_record WHERE id = ?", (record_id,))
+    if not records:
+        logger.warning(f"Voice record with ID {record_id} not found.")
+        raise HTTPException(status_code=404, detail="Voice record not found")
+    return records[0]

@@ -10,6 +10,7 @@ from routers import tts, transcription, system, welcome,voice_records
 from middleware.permissions import AddPermissionsPolicyMiddleware
 from services.db import initialize_database
 from services.tts_service import initialize_tts
+from utils.dependencies import database_exception_handler, DatabaseError
 
 # Initialize logging
 logging.basicConfig(
@@ -43,12 +44,14 @@ app.add_middleware(
 # Add custom Permissions Policy middleware
 app.add_middleware(AddPermissionsPolicyMiddleware)
 
+app.add_exception_handler(DatabaseError, database_exception_handler)
+
 # Include routers
 app.include_router(welcome.router)
-app.include_router(tts.router, prefix="/tts", tags=["TTS"])
+app.include_router(tts.router, prefix="/tts", tags=["TTS"])  # tags are used for OpenAPI documentation
 app.include_router(transcription.router, prefix="/transcription", tags=["Transcription"])
 app.include_router(system.router, prefix="/system", tags=["System"])
-app.include_router(voice_records.router, prefix="/api")
+app.include_router(voice_records.router, prefix="/voice-records",tags=["Voice Records"])
 
 # Optional: Root endpoint if not handled by welcome.router
 @app.get("/", response_class=HTMLResponse)

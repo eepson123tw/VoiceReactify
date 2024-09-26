@@ -17,6 +17,7 @@ ENV/
 migrations/
 
 BE/outVoiceFile
+BE/originVoice
 BE/transcriptions
 
 # Ignore the packages directory

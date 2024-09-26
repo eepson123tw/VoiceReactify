@@ -18,7 +18,7 @@ export interface RecordData {
 export default function useTableApi() {
   const getAllTableData: () => Promise<RecordData[]> = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/voice-records");
+      const response = await fetch("http://localhost:8000/voice-records/all");
       if (!response.ok) {
         throw new Error(`Failed to fetch data with status ${response.status}`);
       }

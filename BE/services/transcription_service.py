@@ -3,6 +3,8 @@ import json
 from typing import AsyncGenerator
 import logging
 from src.voice_model import transcribe_audio
+import subprocess
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -24,3 +26,5 @@ def transcribe_audio_single(audio_data, sampling_rate, return_timestamps):
     except Exception as e:
         logger.error(f"Error during transcription: {e}")
         raise e
+
+

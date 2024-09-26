@@ -1,3 +1,4 @@
+# src/connectionDB.py
 import os
 import sqlite3
 from rich.console import Console
@@ -54,26 +55,6 @@ def create_tables(conn):
             );
         ''')
 
-        # 檢查並添加缺少的欄位
-        cursor.execute("PRAGMA table_info(voice_record);")
-        columns = [info[1] for info in cursor.fetchall()]
-        if 'language' not in columns:
-            cursor.execute("ALTER TABLE voice_record ADD COLUMN language TEXT;")
-            console.print("[green]Added 'language' column to 'voice_record' table.[/green]")
-        if 'error_message' not in columns:
-            cursor.execute("ALTER TABLE voice_record ADD COLUMN error_message TEXT;")
-            console.print("[green]Added 'error_message' column to 'voice_record' table.[/green]")
-        if 'parent_id' not in columns:
-            cursor.execute("ALTER TABLE voice_record ADD COLUMN parent_id INTEGER REFERENCES voice_record(id) ON DELETE CASCADE;")
-            console.print("[green]Added 'parent_id' column to 'voice_record' table.[/green]")
-        
-        # 創建索引
-        cursor.executescript('''
-            CREATE INDEX IF NOT EXISTS idx_voice_record_filename ON voice_record(filename);
-            CREATE INDEX IF NOT EXISTS idx_voice_record_createtime ON voice_record(createtime);
-            CREATE INDEX IF NOT EXISTS idx_voice_record_status ON voice_record(status);
-        ''')
-
         # 創建 tags 表格
         cursor.executescript('''
             CREATE TABLE IF NOT EXISTS tags (
@@ -93,6 +74,13 @@ def create_tables(conn):
             CREATE INDEX IF NOT EXISTS idx_voice_record_tags_tag_id ON voice_record_tags(tag_id);
         ''')
         
+        # 創建索引
+        cursor.executescript('''
+            CREATE INDEX IF NOT EXISTS idx_voice_record_filename ON voice_record(filename);
+            CREATE INDEX IF NOT EXISTS idx_voice_record_createtime ON voice_record(createtime);
+            CREATE INDEX IF NOT EXISTS idx_voice_record_status ON voice_record(status);
+        ''')
+
         conn.commit()
         console.print("[green]All tables and indexes created successfully.[/green]")
     except sqlite3.Error as e:
