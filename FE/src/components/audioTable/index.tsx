@@ -8,7 +8,6 @@ import {
   TableRow,
   TableFooter,
 } from "@/components/ui/table";
-
 import {
   Tooltip,
   TooltipContent,
@@ -16,9 +15,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+
+import { useState, useEffect } from "react";
 
 import useTableApi, { type RecordData } from "@/composables/useTableApi";
-import { useState, useEffect } from "react";
+import AssignmentDialog from "@/components/audioTable/assginmentDialog";
 
 const AudioRecordTable = () => {
   const { getAllTableData } = useTableApi();
@@ -44,6 +46,7 @@ const AudioRecordTable = () => {
           <TableHead>Duration</TableHead>
           <TableHead>Createtime</TableHead>
           <TableHead>Transcript</TableHead>
+          <TableHead>Assignment</TableHead>
           <TableHead>Status</TableHead>
         </TableRow>
       </TableHeader>
@@ -90,11 +93,17 @@ const AudioRecordTable = () => {
                         <p className=" text-nowrap">See Text Record</p>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {/* TODO:change to the text api  or dialog */}
                         <p>{record.transcript}</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
+                </TableCell>
+                <TableCell className="text-left">
+                  <Button variant="link">
+                    <AssignmentDialog data={record}>
+                      <p className="text-blue-500">Assignment</p>
+                    </AssignmentDialog>
+                  </Button>
                 </TableCell>
                 <TableCell className="text-left">
                   <Badge variant="outline">{record.status}</Badge>

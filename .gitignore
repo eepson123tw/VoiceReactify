@@ -27,6 +27,7 @@ packages/
 *.log
 *.pid
 *.tar
+*.env.local
 
 # React
 node_modules/

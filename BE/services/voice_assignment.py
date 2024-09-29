@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-env_path = Path('../env/.env.local').resolve()
+env_path = Path('env/.env.local').resolve()
 print(f"載入 .env 文件: {env_path}")  # 調試輸出
 load_dotenv(dotenv_path=env_path)
 
