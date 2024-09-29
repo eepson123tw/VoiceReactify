@@ -134,3 +134,4 @@ wcwidth==0.2.13
 Werkzeug==3.0.3
 TTS==0.22.0
 python-dotenv==1.0.1
+azure-cognitiveservices-speech

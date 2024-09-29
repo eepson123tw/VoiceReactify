@@ -7,3 +7,6 @@ router = APIRouter()
 @router.get("/", response_class=HTMLResponse)
 async def root():
     return welcomePageTemplate()
+
+
+
