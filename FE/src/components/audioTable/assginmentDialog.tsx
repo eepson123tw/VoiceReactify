@@ -13,33 +13,10 @@ import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
 import { useEffect, useState } from "react";
 
+import useAssignmentApi from "@/composables/useAssignmentApi";
 import Radar from "@/components/chart/radar";
 import ReadAlongText from "@/components/audioTable/readAlongText"; // 请根据实际路径调整导入
 
-const chartData: ChartData = {
-  pronunciation_score: 67.96,
-  accuracy_score: 69.5,
-  completeness_score: 50.0,
-  fluency_score: 92.0,
-  prosody_score: 58.8,
-  words: [
-    {
-      word: "hei",
-      accuracy_score: 66.0,
-      error_type: "Insertion",
-    },
-    {
-      word: "hei",
-      accuracy_score: 86.0,
-      error_type: "None",
-    },
-    {
-      word: "kolo",
-      accuracy_score: 53.0,
-      error_type: "Mispronunciation",
-    },
-  ],
-};
 interface AssignmentDialogProps {
   data: RecordData;
 }
@@ -89,16 +66,28 @@ const chartDataFormatFn = (data: ChartData): RadarDataMap => {
 
 const AssignmentDialog = ({ data }: AssignmentDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [, setDataInfo] = useState<RecordData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [chartData, setDataInfo] = useState<ChartData | null>(null);
+  const { getAssignmentData } = useAssignmentApi({
+    reference_text: data.transcript,
+    reference_path: data.filepath
+      .replace("transcriptions/", "")
+      .replace(".txt", "_converted.wav"),
+  });
 
   useEffect(() => {
-    if (data) {
-      setDataInfo(data);
+    if (!open) {
+      return;
     }
+    setIsLoading(true);
+    getAssignmentData().then((data) => {
+      setDataInfo(data);
+      setIsLoading(false);
+    });
     return () => {
       setDataInfo(null);
     };
-  }, [data]);
+  }, [open, getAssignmentData]);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -112,22 +101,24 @@ const AssignmentDialog = ({ data }: AssignmentDialogProps) => {
           <DialogTitle className="mb-2 text-center">
             Voice Assignment
           </DialogTitle>
-          <DialogDescription className="overflow-y-auto h-[500px]">
-            <div className="h-[300px]">
-              <ParentSize>
-                {({ width, height }) => (
-                  <Radar
-                    width={width}
-                    height={height}
-                    data={chartDataFormatFn(chartData)}
-                  />
-                )}
-              </ParentSize>
-            </div>
-
-            {/* 包含 ReadAlongText 组件 */}
-            <ReadAlongText words={chartData.words} />
-          </DialogDescription>
+          {isLoading
+            ? "Loading..."
+            : chartData && (
+                <DialogDescription className="overflow-y-auto h-[500px]">
+                  <div className="h-[300px]">
+                    <ParentSize>
+                      {({ width, height }) => (
+                        <Radar
+                          width={width}
+                          height={height}
+                          data={chartDataFormatFn(chartData)}
+                        />
+                      )}
+                    </ParentSize>
+                  </div>
+                  <ReadAlongText words={chartData.words} />
+                </DialogDescription>
+              )}
         </DialogHeader>
       </DialogContent>
     </Dialog>
