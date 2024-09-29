@@ -14,8 +14,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+// import { Badge } from "@/components/ui/badge";
 
 import { useState, useEffect } from "react";
 
@@ -47,7 +46,7 @@ const AudioRecordTable = () => {
           <TableHead>Createtime</TableHead>
           <TableHead>Transcript</TableHead>
           <TableHead>Assignment</TableHead>
-          <TableHead>Status</TableHead>
+          {/* <TableHead>Status</TableHead> */}
         </TableRow>
       </TableHeader>
       {isLoading && (
@@ -90,7 +89,7 @@ const AudioRecordTable = () => {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
-                        <p className=" text-nowrap">See Text Record</p>
+                        <p className=" text-nowrap">See Record</p>
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>{record.transcript}</p>
@@ -99,15 +98,11 @@ const AudioRecordTable = () => {
                   </TooltipProvider>
                 </TableCell>
                 <TableCell className="text-left">
-                  <Button variant="link">
-                    <AssignmentDialog data={record}>
-                      <p className="text-blue-500">Assignment</p>
-                    </AssignmentDialog>
-                  </Button>
+                  <AssignmentDialog data={record}></AssignmentDialog>
                 </TableCell>
-                <TableCell className="text-left">
+                {/* <TableCell className="text-left">
                   <Badge variant="outline">{record.status}</Badge>
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))
           )}
