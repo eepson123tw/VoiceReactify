@@ -30,7 +30,7 @@ export default function RecordButton({
         {!isRecording ? (
           <PlayIcon className="h-20 w-20  text-white group-hover:text-black"></PlayIcon>
         ) : (
-          <RadiobuttonIcon className="h-20 w-20  text-black group-hover:text-white"></RadiobuttonIcon>
+          <RadiobuttonIcon className="h-20 w-20  text-white group-hover:text-white"></RadiobuttonIcon>
         )}
       </Button>
       {children}

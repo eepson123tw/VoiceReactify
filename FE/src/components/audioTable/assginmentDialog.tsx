@@ -15,7 +15,7 @@ import { useEffect, useState } from "react";
 
 import useAssignmentApi from "@/composables/useAssignmentApi";
 import Radar from "@/components/chart/radar";
-import ReadAlongText from "@/components/audioTable/readAlongText"; // 请根据实际路径调整导入
+import ReadAlongText from "@/components/audioTable/readAlongText";
 
 interface AssignmentDialogProps {
   data: RecordData;
