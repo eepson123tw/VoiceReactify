@@ -1,8 +1,11 @@
-import { useRef, useEffect, useCallback, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import ToggleEventOption from "@/components/toggleEventOption";
 import RecordButton from "@/components/recordButton";
 import useRecorder from "@/composables/useRecorder";
 import useStreamApi from "@/composables/useStreamApi";
+import useVoiceApi from "@/composables/useVoiceApi";
+import useDraw from "@/composables/useDraw";
+
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 
@@ -15,42 +18,19 @@ const AudioWaveform = () => {
   const [isOption, setIsOption] = useState<Array<"StreamApi" | "TimeStamp">>(
     []
   );
-  // TODO: add playapi and useDrawBar composable
-  const playVoice = () => {
-    fetch("http://localhost:8000/tts/generate-voice", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        prompt: text,
-        description: "You are a voice model",
-        original_record_id: localStorage.getItem("record_id") || "",
-      }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.blob(); // We expect a WAV file in response
-      })
-      .then((blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio
-          .play()
-          .catch((error) => console.error("Error playing audio:", error));
-      })
-      .catch((error) => {
-        console.error("There was a problem with the fetch operation:", error);
-      });
-  };
-
+  const useTimeStamp = isOption.includes("TimeStamp");
+  // to use voice api gen voice
+  const { playVoice } = useVoiceApi({
+    prompt: text,
+    description: "You are a voice model",
+    recordID: localStorage.getItem("record_id") || "",
+  });
+  // to define use stream api or not
   const { transcribeStreamApi, transcribeApi } = useStreamApi({
     setText,
     timeStamp: isOption.includes("TimeStamp"),
   });
-
+  // to use recorder composable
   const {
     startRecording,
     stopRecording,
@@ -59,114 +39,31 @@ const AudioWaveform = () => {
     analyserRef,
     getSamples,
   } = useRecorder({
-    transcribeApi: isOption.includes("StreamApi")
-      ? transcribeStreamApi
-      : transcribeApi,
+    transcribeApi: useTimeStamp ? transcribeStreamApi : transcribeApi,
     timeStamp: isOption.includes("TimeStamp"),
   });
 
-  const drawWaveform = useCallback(() => {
-    if (!analyserRef.current || !canvasRef.current || !dataArrayRef.current)
-      return;
-
-    const canvas = canvasRef.current;
-    const canvasCtx = canvas.getContext("2d")!;
-
-    const bar = ({
-      x,
-      y,
-      width,
-      height,
-      color,
-      i,
-    }: {
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-      color: string;
-      i: number;
-    }) => {
-      const barItem = {
-        x: x,
-        y: y,
-        width: width,
-        height: height,
-        color: color,
-        i,
-      };
-      const update = (micInput: number) => {
-        const sound = micInput * 1000;
-        if (sound > barItem.height) {
-          barItem.height = sound;
-        } else {
-          barItem.height -= barItem.height * 0.05;
-        }
-      };
-      const draw = (canvasCtx: CanvasRenderingContext2D) => {
-        canvasCtx.strokeStyle = barItem.color;
-        canvasCtx.save();
-
-        canvasCtx.translate(canvas.width / 2, canvas.height / 2);
-        canvasCtx.rotate(i * 0.05);
-
-        canvasCtx.beginPath();
-        canvasCtx.moveTo(0, 0);
-        canvasCtx.lineTo(0, barItem.height);
-        canvasCtx.stroke();
-
-        canvasCtx.restore();
-      };
-      return { update, draw };
-    };
-
-    const bars = [] as ReturnType<typeof bar & { i: number }>[];
-
-    const createBars = () => {
-      for (let i = 0; i < 256; i++) {
-        const colors = `hsl(${i * 2},100%,50%)`;
-        bars.push(
-          bar({
-            x: 0,
-            y: i * 1.5,
-            width: 5,
-            height: 10,
-            color: colors,
-            i,
-          })
-        );
-      }
-    };
-
-    createBars();
-
-    const draw = () => {
-      if (dataArrayRef.current) {
-        canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-        bars.forEach((bar, i) => {
-          const samples = getSamples()!;
-
-          bar.update(samples[i]);
-          bar.draw(canvasCtx);
-        });
-      }
-
-      drawAudioRef.current = requestAnimationFrame(draw);
-    };
-    draw();
-  }, [dataArrayRef, analyserRef, getSamples]);
+  const { drawWaveform } = useDraw({
+    analyserRef,
+    canvasRef,
+    dataArrayRef,
+    drawAudioRef,
+    getSamples,
+  });
 
   useEffect(() => {
+    const currentDrawAudioRef = drawAudioRef.current;
     if (isRecording) {
       drawWaveform();
     } else {
-      if (drawAudioRef.current) {
-        cancelAnimationFrame(drawAudioRef.current);
+      if (currentDrawAudioRef) {
+        cancelAnimationFrame(currentDrawAudioRef);
       }
     }
+    // Cleanup function uses the copied ref value
     return () => {
-      if (drawAudioRef.current) {
-        cancelAnimationFrame(drawAudioRef.current);
+      if (currentDrawAudioRef) {
+        cancelAnimationFrame(currentDrawAudioRef);
       }
     };
   }, [isRecording, drawWaveform]);
