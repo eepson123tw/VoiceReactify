@@ -1,12 +1,26 @@
 import React from "react";
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 interface WordObj {
   word: string;
-  error_type: string;
+  error_type: keyof typeof SpeechIssues;
 }
 
 interface ReadAlongTextProps {
   words: WordObj[];
+}
+enum SpeechIssues {
+  Mispronunciation = "發音錯誤",
+  UnexpectedBreak = "意外中斷",
+  MissingBreak = "缺少中斷",
+  Monotone = "單調",
+  None = "None",
 }
 
 const ReadAlongText: React.FC<ReadAlongTextProps> = ({ words }) => {
@@ -22,7 +36,20 @@ const ReadAlongText: React.FC<ReadAlongTextProps> = ({ words }) => {
               key={index}
               className={`mr-2 ${hasError ? "text-red-500 underline" : ""}`}
             >
-              {word}
+              {hasError ? (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <span className="text-nowrap">{word}</span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <span>{SpeechIssues[error_type]}</span>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                word
+              )}
             </span>
           );
         })}

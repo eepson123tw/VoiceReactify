@@ -7,7 +7,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { type RecordData } from "@/composables/useTableApi";
+import type {
+  ChartData,
+  AssignmentDialogProps,
+  ScoreKey,
+  RadarDataMap,
+} from "@/types/const";
 
 import ParentSize from "@visx/responsive/lib/components/ParentSize";
 
@@ -16,30 +21,6 @@ import { useEffect, useState } from "react";
 import useAssignmentApi from "@/composables/useAssignmentApi";
 import Radar from "@/components/chart/radar";
 import ReadAlongText from "@/components/audioTable/readAlongText";
-
-interface AssignmentDialogProps {
-  data: RecordData;
-}
-
-interface ChartData {
-  pronunciation_score: number;
-  accuracy_score: number;
-  completeness_score: number;
-  fluency_score: number;
-  prosody_score: number;
-  words: {
-    word: string;
-    accuracy_score: number;
-    error_type: string;
-  }[];
-}
-
-type ScoreKey = keyof ChartData;
-
-type RadarDataMap = {
-  letter: ScoreKey;
-  frequency: number;
-}[];
 
 const chartDataFormatFn = (data: ChartData): RadarDataMap => {
   const dataMap: RadarDataMap = Object.entries(data).map(([key, value]) => {

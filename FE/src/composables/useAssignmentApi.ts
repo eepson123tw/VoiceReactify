@@ -1,24 +1,5 @@
 import { useCallback } from "react";
-
-export interface ChartData {
-  pronunciation_score: number;
-  accuracy_score: number;
-  completeness_score: number;
-  fluency_score: number;
-  prosody_score: number;
-  words: {
-    word: string;
-    accuracy_score: number;
-    error_type: string;
-  }[];
-}
-
-export type ScoreKey = keyof ChartData;
-
-export type RadarDataMap = {
-  letter: ScoreKey;
-  frequency: number;
-}[];
+import type { ChartData } from "@/types/const";
 
 export default function useAssignmentApi({
   reference_text,

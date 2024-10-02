@@ -8,8 +8,10 @@ import { useTooltip, Tooltip, defaultStyles } from "@visx/tooltip";
 import { Point } from "@visx/point";
 import { Text } from "@visx/text";
 
+import { SpeechScores } from "@/types/const";
+
 type RadarDataEntry = {
-  letter: string;
+  letter: keyof typeof SpeechScores;
   frequency: number;
 };
 
@@ -159,7 +161,7 @@ export default function Radar({
                 dx={points[i].x}
                 dy={points[i].y}
               >
-                {data[i].letter}
+                {SpeechScores[data[i].letter]}
               </Text>
             </Group>
           ))}
@@ -181,7 +183,7 @@ export default function Radar({
               onMouseOver={() => {
                 handleMouseOver(
                   point,
-                  `${data[i].letter}: ${data[i].frequency}`
+                  `${SpeechScores[data[i].letter]}: ${data[i].frequency}`
                 );
               }}
               onMouseLeave={hideTooltip}
