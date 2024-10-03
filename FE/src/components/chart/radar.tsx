@@ -161,7 +161,7 @@ export default function Radar({
                 dx={points[i].x}
                 dy={points[i].y}
               >
-                {SpeechScores[data[i].letter]}
+                {data[i].letter}
               </Text>
             </Group>
           ))}

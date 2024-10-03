@@ -21,6 +21,8 @@ enum SpeechIssues {
   MissingBreak = "缺少中斷",
   Monotone = "單調",
   None = "None",
+  Omission = "省略",
+  Insertion = "插入",
 }
 
 const ReadAlongText: React.FC<ReadAlongTextProps> = ({ words }) => {
@@ -43,7 +45,9 @@ const ReadAlongText: React.FC<ReadAlongTextProps> = ({ words }) => {
                       <span className="text-nowrap">{word}</span>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <span>{SpeechIssues[error_type]}</span>
+                      <span>
+                        {error_type + `(${SpeechIssues[error_type]})`}
+                      </span>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>

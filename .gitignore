@@ -19,6 +19,7 @@ migrations/
 BE/outVoiceFile
 BE/originVoice
 BE/transcriptions
+BE/db
 
 # Ignore the packages directory
 packages/
