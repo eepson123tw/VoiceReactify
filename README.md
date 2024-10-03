@@ -134,6 +134,8 @@ If you prefer using Docker:
 
 ## Important Notice
 
+**Also, your computer needs to have enough memory to run this app.**
+
 When running the application in Docker, you need to modify the backend code to automatically agree to the terms of service for certain AI models. This is necessary for downloading and using specific models within a containerized environment.
 
 **Modify the `ask_tos` Method**
