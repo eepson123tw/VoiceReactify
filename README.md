@@ -31,7 +31,7 @@ VoiceReactify is a React-based application that integrates audio processing with
 Before you begin, ensure you have met the following requirements:
 
 - **Node.js**: Install from [here](https://nodejs.org/en/download/).
-- **npm or yarn**: Comes with Node.js; yarn can be installed from [here](https://classic.yarnpkg.com/en/docs/install).
+- **pnpm**: Comes with Node.js.
 - **Python**: Required for backend processing. Install from [here](https://www.python.org/downloads/).
 - **Docker** (Optional): For containerization. Install from [here](https://docs.docker.com/get-docker/).
 
@@ -50,9 +50,7 @@ Follow these steps to set up the project locally:
 
    ```bash
    cd frontend
-   npm install
-   # or
-   yarn install
+   pnpm install
    ```
 
 3. **Install Backend Dependencies**
