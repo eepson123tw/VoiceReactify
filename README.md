@@ -154,11 +154,6 @@ def ask_tos(model_full_path):
     return True
 ```
 
-**Why This Change is Necessary**
-
-- **Automatic Agreement**: This modification automates the acceptance of the terms of service, which is essential when running the application in a non-interactive Docker environment.
-- **Model Download**: Without this change, the required models may not download correctly, causing the application to malfunction.
-
 ## Contributing
 
 Contributions are welcome! Please follow these steps:
